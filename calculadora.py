@@ -31,7 +31,7 @@ taxa_total_perc = taxa_adm + fundo_res
 custo_total_cons_base = valor_carta * (1 + (taxa_total_perc / 100))
 parcela_inicial_cons = (custo_total_cons_base / prazo) * fator_reducao
 
-# Cálculos do Financiamento (Assumindo 20% de entrada padrão)
+# Cálculos do Financiamento (Assumindo 30% de entrada padrão)
 entrada_financiamento = valor_carta * 0.20
 valor_financiado = valor_carta - entrada_financiamento
 juros_mes = 0.14 / 12 # 14% ao ano
@@ -49,13 +49,18 @@ with tab1:
     st.subheader("Análise Financeira: Como o mercado cobra pelo crédito")
     st.markdown("Comparativo direto para aquisição de um bem no valor de **R$ {:,.2f}**".format(valor_carta).replace(",", "X").replace(".", ",").replace("X", "."))
     
+    # Cálculo do CET Anual do Consórcio
+    anos_plano = prazo / 12
+    cet_anual_consorcio = taxa_total_perc / anos_plano
+    cet_formatado = f"{cet_anual_consorcio:.2f}".replace(".", ",")
+    
     # Construindo a tabela comparativa visual
     st.markdown(f"""
     <table style="width:100%; text-align:left; font-size:18px; border-collapse: collapse;">
         <tr style="background-color: #f0f2f6; border-bottom: 2px solid #ccc;">
             <th style="padding: 15px;">Parâmetro</th>
             <th style="padding: 15px; color: #d9534f;">🏦 Financiamento (CET 14% a.a)</th>
-            <th style="padding: 15px; color: #5cb85c;">🚀 Consórcio Inteligente</th>
+            <th style="padding: 15px; color: #5cb85c;">🚀 Consórcio (CET {cet_formatado}% a.a)</th>
         </tr>
         <tr style="border-bottom: 1px solid #eee;">
             <td style="padding: 15px;"><b>Valor de Entrada</b></td>
