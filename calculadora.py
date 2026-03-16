@@ -13,7 +13,7 @@ with st.expander("⚙️ Parâmetros do Plano (Clique para expandir/ocultar)", e
     with c2: prazo = st.number_input("Prazo (Meses)", min_value=12, value=220, step=12)
     with c3: taxa_adm = st.number_input("Taxa Adm (%)", min_value=0.0, value=24.2, step=0.5)
     with c4: fundo_res = st.number_input("Fundo Res. (%)", min_value=0.0, value=2.0, step=0.5)
-    with c5: incc_anual = st.number_input("INCC Anual (%)", min_value=0.0, value=5.0, step=0.5)
+    with c5: incc_anual = st.number_input("INCC/INPC Anual (%)", min_value=0.0, value=5.0, step=0.5)
     
     c6, c7, c8, c9, c10 = st.columns(5)
     with c6: plano_reduzido = st.selectbox("Parcela Inicial", ["Integral (100%)", "Reduzida (70%)", "Meia (50%)"])
@@ -31,22 +31,30 @@ taxa_total_perc = taxa_adm + fundo_res
 custo_total_cons_base = valor_carta * (1 + (taxa_total_perc / 100))
 parcela_inicial_cons = (custo_total_cons_base / prazo) * fator_reducao
 
-# Cálculos do Financiamento (Assumindo 30% de entrada padrão)
-entrada_financiamento = valor_carta * 0.20
-valor_financiado = valor_carta - entrada_financiamento
-juros_mes = 0.14 / 12 # 14% ao ano
-meses_financiamento = 420
-parcela_inicial_fin = valor_financiado * (juros_mes * (1 + juros_mes)**meses_financiamento) / ((1 + juros_mes)**meses_financiamento - 1)
-total_financiamento = (parcela_inicial_fin * meses_financiamento) + entrada_financiamento
+# Cálculos do Financiamento IMOBILIÁRIO (30% entrada, 14% a.a, 420 meses)
+entrada_fin_imob = valor_carta * 0.20
+valor_financiado_imob = valor_carta - entrada_fin_imob
+juros_mes_imob = 0.14 / 12
+meses_fin_imob = 420
+parcela_inicial_fin_imob = valor_financiado_imob * (juros_mes_imob * (1 + juros_mes_imob)**meses_fin_imob) / ((1 + juros_mes_imob)**meses_fin_imob - 1)
+total_fin_imob = (parcela_inicial_fin_imob * meses_fin_imob) + entrada_fin_imob
+
+# Cálculos do Financiamento de VEÍCULOS (30% entrada, 30% a.a, 60 meses)
+entrada_fin_veiculo = valor_carta * 0.20
+valor_financiado_veiculo = valor_carta - entrada_fin_veiculo
+juros_mes_veiculo = 0.30 / 12
+meses_fin_veiculo = 60
+parcela_inicial_fin_veiculo = valor_financiado_veiculo * (juros_mes_veiculo * (1 + juros_mes_veiculo)**meses_fin_veiculo) / ((1 + juros_mes_veiculo)**meses_fin_veiculo - 1)
+total_fin_veiculo = (parcela_inicial_fin_veiculo * meses_fin_veiculo) + entrada_fin_veiculo
 
 # --- CRIANDO AS PÁGINAS (ABAS) ---
-tab1, tab2 = st.tabs(["⚖️ Comparativo (Financiamento x Consórcio)", "📈 Detalhes da Contemplação e INCC"])
+tab1, tab2 = st.tabs(["⚖️ Comparativo (Financiamento x Consórcio)", "📈 Detalhes da Contemplação e Reajuste"])
 
 # ==========================================
 # PÁGINA 1: O CHOQUE DE REALIDADE
 # ==========================================
 with tab1:
-    st.subheader("Análise Financeira: Como o mercado cobra pelo crédito")
+    st.markdown("### Análise Financeira: Como o mercado cobra pelo crédito")
     st.markdown("Comparativo direto para aquisição de um bem no valor de **R$ {:,.2f}**".format(valor_carta).replace(",", "X").replace(".", ",").replace("X", "."))
     
     # Cálculo do CET Anual do Consórcio
@@ -54,45 +62,78 @@ with tab1:
     cet_anual_consorcio = taxa_total_perc / anos_plano
     cet_formatado = f"{cet_anual_consorcio:.2f}".replace(".", ",")
     
-    # Construindo a tabela comparativa visual
+    # --- TABELA 1: IMÓVEIS ---
+    st.markdown("#### 🏡 Cenário 1: Aquisição de Imóvel")
     st.markdown(f"""
-    <table style="width:100%; text-align:left; font-size:18px; border-collapse: collapse;">
+    <table style="width:100%; text-align:left; font-size:16px; border-collapse: collapse; margin-bottom: 20px;">
         <tr style="background-color: #f0f2f6; border-bottom: 2px solid #ccc;">
-            <th style="padding: 15px;">Parâmetro</th>
-            <th style="padding: 15px; color: #d9534f;">🏦 Financiamento (CET 14% a.a)</th>
-            <th style="padding: 15px; color: #5cb85c;">🚀 Consórcio (CET {cet_formatado}% a.a)</th>
+            <th style="padding: 12px; width: 25%;">Parâmetro</th>
+            <th style="padding: 12px; color: #d9534f; width: 37%;">🏦 Financiamento (CET 14% a.a)</th>
+            <th style="padding: 12px; color: #5cb85c; width: 38%;">🚀 Consórcio (CET {cet_formatado}% a.a)</th>
         </tr>
         <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 15px;"><b>Valor de Entrada</b></td>
-            <td style="padding: 15px;">R$ {entrada_financiamento:,.2f}</td>
-            <td style="padding: 15px; font-weight: bold; color: #5cb85c;">R$ 0,00</td>
+            <td style="padding: 12px;"><b>Valor de Entrada</b></td>
+            <td style="padding: 12px;">R$ {entrada_fin_imob:,.2f}</td>
+            <td style="padding: 12px; font-weight: bold; color: #5cb85c;">R$ 0,00</td>
         </tr>
         <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 15px;"><b>Parcela Inicial</b></td>
-            <td style="padding: 15px;">R$ {parcela_inicial_fin:,.2f}</td>
-            <td style="padding: 15px;">R$ {parcela_inicial_cons:,.2f}</td>
+            <td style="padding: 12px;"><b>Parcela Inicial</b></td>
+            <td style="padding: 12px;">R$ {parcela_inicial_fin_imob:,.2f}</td>
+            <td style="padding: 12px;">R$ {parcela_inicial_cons:,.2f}</td>
         </tr>
         <tr style="border-bottom: 1px solid #eee;">
-            <td style="padding: 15px;"><b>Custo Total</b></td>
-            <td style="padding: 15px; color: #d9534f; font-weight: bold;">R$ {total_financiamento:,.2f}</td>
-            <td style="padding: 15px; font-weight: bold;">R$ {custo_total_cons_base:,.2f}</td>
+            <td style="padding: 12px;"><b>Custo Total</b></td>
+            <td style="padding: 12px; color: #d9534f; font-weight: bold;">R$ {total_fin_imob:,.2f}</td>
+            <td style="padding: 12px; font-weight: bold;">R$ {custo_total_cons_base:,.2f}</td>
         </tr>
         <tr>
-            <td style="padding: 15px;"><b>Prazo</b></td>
-            <td style="padding: 15px;">420 meses</td>
-            <td style="padding: 15px;">{prazo} meses</td>
+            <td style="padding: 12px;"><b>Prazo</b></td>
+            <td style="padding: 12px;">{meses_fin_imob} meses</td>
+            <td style="padding: 12px;">{prazo} meses</td>
         </tr>
     </table>
     """, unsafe_allow_html=True)
-    st.caption("*Nota: O custo total do consórcio representa o crédito somado às taxas administrativas do plano contratado.*")
+
+    # --- TABELA 2: VEÍCULOS ---
+    st.markdown("#### 🚗 Cenário 2: Aquisição de Veículo (Pesados ou Leves)")
+    st.markdown(f"""
+    <table style="width:100%; text-align:left; font-size:16px; border-collapse: collapse;">
+        <tr style="background-color: #f0f2f6; border-bottom: 2px solid #ccc;">
+            <th style="padding: 12px; width: 25%;">Parâmetro</th>
+            <th style="padding: 12px; color: #d9534f; width: 37%;">🏦 Financiamento (CET 30% a.a)</th>
+            <th style="padding: 12px; color: #5cb85c; width: 38%;">🚀 Consórcio (CET {cet_formatado}% a.a)</th>
+        </tr>
+        <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 12px;"><b>Valor de Entrada</b></td>
+            <td style="padding: 12px;">R$ {entrada_fin_veiculo:,.2f}</td>
+            <td style="padding: 12px; font-weight: bold; color: #5cb85c;">R$ 0,00</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 12px;"><b>Parcela Inicial</b></td>
+            <td style="padding: 12px;">R$ {parcela_inicial_fin_veiculo:,.2f}</td>
+            <td style="padding: 12px;">R$ {parcela_inicial_cons:,.2f}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 12px;"><b>Custo Total</b></td>
+            <td style="padding: 12px; color: #d9534f; font-weight: bold;">R$ {total_fin_veiculo:,.2f}</td>
+            <td style="padding: 12px; font-weight: bold;">R$ {custo_total_cons_base:,.2f}</td>
+        </tr>
+        <tr>
+            <td style="padding: 12px;"><b>Prazo</b></td>
+            <td style="padding: 12px;">{meses_fin_veiculo} meses</td>
+            <td style="padding: 12px;">{prazo} meses</td>
+        </tr>
+    </table>
+    """, unsafe_allow_html=True)
+    
+    st.caption("*Nota: O custo total do consórcio representa o crédito somado às taxas administrativas. O prazo do consórcio é o mesmo para ambos os comparativos, baseado nos parâmetros preenchidos.*")
 
 # ==========================================
 # PÁGINA 2: DETALHES, INCC E AMORTIZAÇÃO
 # ==========================================
 with tab2:
-    # --- PROJEÇÃO DE 3 ANOS (O argumento do Lucro Real) ---
-    st.subheader("💡 A Mágica do INCC: Projeção de Patrimônio (3 Primeiros Anos)")
-    st.markdown("Veja como a valorização da sua carta supera de longe o reajuste pago nas parcelas.")
+    st.subheader("💡 A Mágica da Correção: Projeção de Patrimônio (3 Primeiros Anos)")
+    st.markdown("Veja como a valorização da sua carta supera o reajuste pago nas parcelas.")
     
     c_ano1 = valor_carta
     p_ano1 = parcela_inicial_cons
